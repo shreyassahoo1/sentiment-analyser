@@ -1,0 +1,737 @@
+🚀 Full-Stack AI/ML Workshop Manual
+Building a Sentiment & Tone Analyzer with MERN + Python Machine Learning
+🎓 Level: 5th-semester UG  |  ⏱️ Duration: 2 hours  |  🛠️ Mode: Hands-on
+📘 Document Overview
+🎯 What you will build
+A web application where a user pastes a paragraph and receives:
+An overall sentiment (Positive, Negative, or Neutral) with a confidence score
+A sentence-by-sentence breakdown
+A second opinion from a ready-made model (VADER) for comparison
+A saved history of analyses in a database, with summary counts
+🏆 Learning outcomes
+By the end, you will be able to:
+Explain how the layers of a full-stack application connect (React, Express, MongoDB).
+Train a machine learning model and evaluate it.
+Serve a trained model as an API (FastAPI).
+Connect a Node.js backend to a Python ML microservice.
+Test APIs with Thunder Client.
+Inspect stored data with MongoDB Compass.
+Explain how an AI/ML application’s backend works, including its limits.
+🏗️ Architecture
+┌──────────────┐    ┌───────────────────┐    ┌──────────────────────────┐│ React :5173  │ →  │ Express/Node :5000│ →  │ Python FastAPI + ML :8000││ (what user   │    │ (main backend:    │    │ (loads trained model,    ││  sees)       │    │  rules + database)│    │  returns predictions)    │└──────────────┘    └─────────┬─────────┘    └──────────────────────────┘                              ↓                    ┌───────────────────┐                    │ MongoDB :27017    │  ← viewed with Compass                    └───────────────────┘
+💡 Why this design? ML libraries (scikit-learn) live in Python, while the web ecosystem lives in JavaScript. Real companies often separate them: the Node server handles users and data, and a Python service handles predictions. This pattern is called a microservice architecture.
+📖 Glossary
+Term | Meaning
+Term
+Meaning
+API | A URL that your code can send data to and receive an answer from
+API
+A URL that your code can send data to and receive an answer from
+Endpoint | One specific API URL, e.g.  /api/analyses
+Endpoint
+One specific API URL, e.g. /api/analyses
+HTTP methods | GET (read), POST (create), PUT (update), DELETE (remove)
+HTTP methods
+GET (read), POST (create), PUT (update), DELETE (remove)
+JSON | A text format for exchanging data, e.g.  {"text": "hello"}
+JSON
+A text format for exchanging data, e.g. {"text": "hello"}
+Frontend | The part running in the browser (React)
+Frontend
+The part running in the browser (React)
+Backend | The part running on a server (Express, FastAPI)
+Backend
+The part running on a server (Express, FastAPI)
+Database | Permanent storage for data (MongoDB)
+Database
+Permanent storage for data (MongoDB)
+ML model | A program that learns patterns from examples instead of being hand-coded
+ML model
+A program that learns patterns from examples instead of being hand-coded
+Training | Showing a model labeled examples so it learns the patterns
+Training
+Showing a model labeled examples so it learns the patterns
+Inference / Prediction | Using a trained model on new data
+Inference / Prediction
+Using a trained model on new data
+Port | A numbered “door” on your computer where a program listens
+Port
+A numbered “door” on your computer where a program listens
+🔌 Ports used
+Service | Port
+Service
+Port
+React (Vite) | 5173
+React (Vite)
+5173
+Express | 5000
+Express
+5000
+Python ML service | 8000
+Python ML service
+8000
+MongoDB | 27017
+MongoDB
+27017
+🧰 MODULE 1: Installation and Environment Setup
+Step 1.1: Install the required tools
+🎯 Objective: Prepare your computer with every tool the project needs.
+💡 Why we do this: A full-stack AI application uses several technologies. Each one must exist on your machine before any code can run.
+Tool | Download from | Role in the project
+Tool
+Download from
+Role in the project
+Node.js (LTS) | nodejs.org | Runs JavaScript outside the browser. Needed for Express and for building React
+Node.js (LTS)
+nodejs.org
+Runs JavaScript outside the browser. Needed for Express and for building React
+Python 3.9+ | python.org | Runs our machine learning code. During install, tick “Add Python to PATH”
+Python 3.9+
+python.org
+Runs our machine learning code. During install, tick “Add Python to PATH”
+VS Code | code.visualstudio.com | The editor where we write code and run terminals
+VS Code
+code.visualstudio.com
+The editor where we write code and run terminals
+MongoDB Community Server | mongodb.com/try/download/community | The database engine. On Windows choose Complete and keep “Install as a Service” ticked
+MongoDB Community Server
+mongodb.com/try/download/community
+The database engine. On Windows choose Complete and keep “Install as a Service” ticked
+MongoDB Compass | Bundled with the installer, or mongodb.com/try/download/compass | A visual tool to see the data inside MongoDB
+MongoDB Compass
+Bundled with the installer, or mongodb.com/try/download/compass
+A visual tool to see the data inside MongoDB
+Thunder Client | VS Code → Extensions (Ctrl+Shift+X) → search “Thunder Client” → Install | A tool to send test requests to APIs
+Thunder Client
+VS Code → Extensions (Ctrl+Shift+X) → search “Thunder Client” → Install
+A tool to send test requests to APIs
+⚡ Impact on the project: Missing any one of these stops the project at a specific layer: no Node means no backend or frontend, no Python means no ML, no MongoDB means no storage.
+Step 1.2: Verify the installations
+Open PowerShell and run:
+node -vnpm -vpython --version
+What this does: Each command asks the tool to print its version. A version number proves it is installed and reachable from the terminal. npm is Node’s package manager, which downloads libraries for us.
+Expected output: Three version numbers (Node v18 or higher, Python 3.9 or higher). If python is not recognized, reinstall Python with “Add to PATH” ticked, then reopen the terminal.
+Step 1.3: Verify MongoDB with Compass
+Open MongoDB Compass.
+Use the connection string mongodb://127.0.0.1:27017.
+Click Connect.
+What this does: It connects Compass to the MongoDB engine running on your computer (127.0.0.1 means “this computer”, 27017 is MongoDB’s default port).
+Expected output: You see three default databases: admin, config, local.
+❓ Why 127.0.0.1 and not localhost: Newer Node versions sometimes resolve localhost to an IPv6 address that MongoDB isn’t listening on. The numeric address avoids that problem.
+✅ Checkpoint: Node, npm, Python versions print, and Compass connects.
+📁 MODULE 2: Project Setup
+Step 2.1: Create the project folders
+cd Desktopmkdir sentiment-analyzercd sentiment-analyzermkdir ml-servicemkdir servercode .
+What each line does:
+Command | Meaning
+Command
+Meaning
+cd Desktop | Move into the Desktop folder
+cd Desktop
+Move into the Desktop folder
+mkdir sentiment-analyzer | Create the main project folder
+mkdir sentiment-analyzer
+Create the main project folder
+cd sentiment-analyzer | Enter it
+cd sentiment-analyzer
+Enter it
+mkdir ml-service  /  mkdir server | Create one folder per backend service
+mkdir ml-service / mkdir server
+Create one folder per backend service
+code . | Open the current folder in VS Code
+code .
+Open the current folder in VS Code
+💡 Why separate folders: Each layer (ML, backend, frontend) has different languages, libraries, and a different running process. Keeping them apart mirrors real projects and prevents confusion. The client folder will be created automatically in Module 5.
+⚡ Impact: This folder structure is the skeleton every later step relies on.
+In VS Code, open the terminal with Terminal → New Terminal. You will use three terminals during the workshop, one per service.
+🤖 MODULE 3: The Machine Learning Service (Python)
+🧠 Concept: Machine learning means a program learns rules from examples instead of being told the rules. Here, we show it labeled sentences (positive, negative, neutral), and it learns which words signal which sentiment.
+Step 3.1: Create a Python virtual environment and install libraries
+cd ml-servicepython -m venv .venv.venv\Scripts\Activate.ps1
+If PowerShell shows “running scripts is disabled”, run this once, then retry:
+Set-ExecutionPolicy -Scope Process Bypass
+Then install:
+pip install fastapi uvicorn scikit-learn joblib vaderSentiment
+What this does:
+python -m venv .venv creates a virtual environment, an isolated box of Python libraries just for this project.
+Activate.ps1 switches your terminal into that box. Your prompt now starts with (.venv).
+pip install downloads the libraries into the box.
+💡 Why a virtual environment: Different projects need different library versions. Isolation prevents one project from breaking another.
+Library | Role in the project
+Library
+Role in the project
+scikit-learn | Provides the ML algorithms we train (TF-IDF and Logistic Regression)
+scikit-learn
+Provides the ML algorithms we train (TF-IDF and Logistic Regression)
+joblib | Saves a trained model to a file and loads it again later
+joblib
+Saves a trained model to a file and loads it again later
+vaderSentiment | A pre-trained, rule-based sentiment tool, our “second opinion”
+vaderSentiment
+A pre-trained, rule-based sentiment tool, our “second opinion”
+fastapi | A framework that turns Python functions into API endpoints
+fastapi
+A framework that turns Python functions into API endpoints
+uvicorn | The server program that runs a FastAPI application
+uvicorn
+The server program that runs a FastAPI application
+✅ Checkpoint: Your prompt shows (.venv) and pip finishes without errors. (Mac/Linux activation: source .venv/bin/activate.)
+Step 3.2: Create the training dataset
+📄 File: ml-service/dataset.py
+POSITIVE = [    "I absolutely love this product and it works perfectly.",    "The service was fantastic and the staff were very friendly.",    "What a wonderful day I had a great time with my family.",    "This movie was amazing and the acting was brilliant.",    "I am so happy with my new phone it is excellent.",    "The food was delicious and the portions were generous.",    "Our teacher is wonderful and explains everything clearly.",    "I am very proud of the team for their outstanding work.",    "The hotel room was clean comfortable and beautiful.",    "Great value for money and I would highly recommend it.",    "She did an incredible job and everyone was impressed.",    "The workshop was inspiring and I learned so much.",    "I feel grateful and excited about the new opportunity.",    "The delivery was quick and the packaging was perfect.",    "This app is easy to use and really helpful.",    "We had a lovely evening and the music was superb.",    "The new update is smooth fast and fantastic.",    "I am thrilled to announce that I passed the exam.",    "Everything about the trip was perfect and memorable.",    "The customer support solved my problem immediately and politely.",    "He is a kind generous person and a true friend.",    "The park looks gorgeous and the weather is lovely today.",    "I enjoyed every minute of the concert it was magical.",    "Best purchase I have made this year and totally worth it.",    "The results are excellent and exceeded our expectations.",    "My manager is supportive and always encourages me.",    "The cake was moist rich and absolutely delightful.",    "I love how simple and elegant the design is.",    "Such a refreshing and joyful experience overall.",    "The students performed brilliantly and made us proud.",]NEGATIVE = [    "I hate this product and it stopped working after one day.",    "The service was terrible and the staff were rude.",    "What a horrible day everything went wrong.",    "This movie was boring and the acting was awful.",    "I am so disappointed with my new phone it is useless.",    "The food was cold and tasted disgusting.",    "Our teacher is confusing and never answers questions.",    "I am very upset about the team and their careless work.",    "The hotel room was dirty noisy and uncomfortable.",    "Waste of money and I would never recommend it.",    "He did a terrible job and everyone was annoyed.",    "The workshop was dull and I learned nothing.",    "I feel anxious and frustrated about the situation.",    "The delivery was late and the package was damaged.",    "This app is slow buggy and really frustrating.",    "We had an awful evening and the music was too loud.",    "The new update is broken and keeps crashing.",    "I am devastated that I failed the exam.",    "Everything about the trip was a disaster.",    "The customer support ignored my complaint and was impolite.",    "He is a selfish dishonest person and a bad friend.",    "The park looks filthy and the weather is miserable today.",    "I regret going to the concert it was a nightmare.",    "Worst purchase I have made this year and a complete mistake.",    "The results are poor and far below our expectations.",    "My manager is unfair and always criticizes me.",    "The cake was dry bland and totally unpleasant.",    "I dislike how messy and confusing the design is.",    "Such an exhausting and depressing experience overall.",    "The students performed badly and let us down.",]NEUTRAL = [    "The meeting is scheduled for ten on Monday.",    "The package contains a charger and a user manual.",    "The library is located on the second floor of the building.",    "Water boils at one hundred degrees Celsius.",    "The company has offices in three different cities.",    "Please submit the form before the end of the month.",    "The train departs from platform four.",    "The report includes data from the last five years.",    "He walked to the station and bought a ticket.",    "The class begins at nine and ends at noon.",    "The store sells books stationery and electronics.",    "There are twenty students in the room.",    "The document was sent to the office yesterday.",    "The river flows through the northern part of the city.",    "The phone has a six inch screen and two cameras.",    "She works in the finance department of the company.",    "The bus stop is near the post office.",    "The event will be held in the main hall.",    "Tomorrow the temperature will be around twenty five degrees.",    "The book has three hundred pages and twelve chapters.",    "The website was updated on Tuesday.",    "They moved to a new apartment last week.",    "The committee will review the proposal next month.",    "The software runs on Windows and Linux.",    "He parked the car outside the building.",    "The museum opens at eight in the morning.",    "The recipe requires flour sugar and two eggs.",    "The lecture covers the basics of databases.",    "The road connects the airport to the city center.",    "The application form has four sections.",]
+What this code does: It defines three Python lists. Each contains 30 example sentences of one sentiment class. These are our labeled training examples.
+💡 Why we do this: A supervised ML model cannot learn without examples. The quality and variety of this data directly determine how good the model is. This step is the “teaching material” for the model.
+⚡ Impact on the project: This dataset is the model’s entire knowledge. Words it never saw here (e.g. slang) will confuse it, which is why real systems use thousands or millions of examples. Neutral examples matter too: without them the model could only say positive or negative.
+Step 3.3: Train, evaluate, and save the model
+📄 File: ml-service/train.py
+import joblibfrom sklearn.pipeline import Pipelinefrom sklearn.feature_extraction.text import TfidfVectorizerfrom sklearn.linear_model import LogisticRegressionfrom sklearn.model_selection import train_test_splitfrom sklearn.metrics import accuracy_score, classification_reportfrom dataset import POSITIVE, NEGATIVE, NEUTRAL# 1. Combine the data and attach a label to every sentencetexts = POSITIVE + NEGATIVE + NEUTRALlabels = (["positive"] * len(POSITIVE)          + ["negative"] * len(NEGATIVE)          + ["neutral"] * len(NEUTRAL))# 2. Split: 75% to learn from, 25% hidden to test the model fairlyX_train, X_test, y_train, y_test = train_test_split(    texts, labels, test_size=0.25, random_state=42, stratify=labels)# 3. Pipeline = TF-IDF (text -> numbers) + Logistic Regression (the classifier)model = Pipeline([    ("tfidf", TfidfVectorizer(ngram_range=(1, 2), lowercase=True)),    ("clf", LogisticRegression(max_iter=1000)),])# 4. Train and evaluate on the unseen test datamodel.fit(X_train, y_train)predictions = model.predict(X_test)print("Accuracy:", round(accuracy_score(y_test, predictions), 2))print(classification_report(y_test, predictions))# 5. Retrain on all the data and save the model to a filemodel.fit(texts, labels)joblib.dump(model, "model.joblib")print("Model saved as model.joblib")# 6. Quick try-outfor s in ["I love this so much", "This is the worst thing ever", "The train leaves at noon"]:    print(s, "->", model.predict([s])[0])
+▶️ Run it (with (.venv) active, inside ml-service):
+python train.py
+Code explained, block by block
+Block | What it does | Why it matters
+Block
+What it does
+Why it matters
+1. Combine | Joins the three lists into one list of sentences ( texts ) and builds a matching list of labels | ML needs inputs (sentences) paired with correct answers (labels)
+1. Combine
+Joins the three lists into one list of sentences (texts) and builds a matching list of labels
+ML needs inputs (sentences) paired with correct answers (labels)
+2. Split | train_test_split  hides 25% of the data.  stratify  keeps class proportions equal.  random_state=42  makes the split repeatable | A model tested on data it has already seen would look falsely perfect. Hidden data gives an honest accuracy
+2. Split
+train_test_split hides 25% of the data. stratify keeps class proportions equal. random_state=42 makes the split repeatable
+A model tested on data it has already seen would look falsely perfect. Hidden data gives an honest accuracy
+3. Pipeline | Chains two steps: TF-IDF then Logistic Regression | A computer cannot read words, only numbers. The pipeline guarantees the same conversion happens in training and prediction
+3. Pipeline
+Chains two steps: TF-IDF then Logistic Regression
+A computer cannot read words, only numbers. The pipeline guarantees the same conversion happens in training and prediction
+4. Train and evaluate | fit  = learn from training data.  predict  = guess labels for the hidden test data. We then print accuracy and a per-class report | This is the core ML loop: learn, then test
+4. Train and evaluate
+fit = learn from training data. predict = guess labels for the hidden test data. We then print accuracy and a per-class report
+This is the core ML loop: learn, then test
+5. Retrain and save | Retrains using all data, then  joblib.dump  writes the model to  model.joblib | Training happens once. Saving lets the API load a ready model instantly instead of retraining on every start
+5. Retrain and save
+Retrains using all data, then joblib.dump writes the model to model.joblib
+Training happens once. Saving lets the API load a ready model instantly instead of retraining on every start
+6. Try-out | Predicts three new sentences | A quick sanity check
+6. Try-out
+Predicts three new sentences
+A quick sanity check
+🧠 The two ML concepts inside the pipeline
+TF-IDF (Term Frequency, Inverse Document Frequency) turns a sentence into a list of numbers. A word’s number is high if it appears often in this sentence but rarely across all sentences, so distinctive words like “terrible” count more than common words like “the”. ngram_range=(1, 2) also tracks pairs of words like “not good”.
+Logistic Regression is a classifier. It learns a weight for each word (e.g. “love” pushes toward positive, “awful” toward negative) and converts the total into a probability for each class. We use these probabilities as the confidence score.
+Expected output: An accuracy value, a classification report (precision, recall, f1-score per class), three try-out predictions, and the message Model saved as model.joblib. A new file model.joblib appears in the folder.
+⚠️ Honest note: With only 90 sentences, results are decent but not perfect, and accuracy may vary. Real systems train on thousands of examples.
+✅ Checkpoint: model.joblib exists.
+Step 3.4: Turn the model into an API
+📄 File: ml-service/app.py
+import reimport joblibfrom fastapi import FastAPI, HTTPExceptionfrom pydantic import BaseModelfrom vaderSentiment.vaderSentiment import SentimentIntensityAnalyzerapp = FastAPI()model = joblib.load("model.joblib")      # our trained modelvader = SentimentIntensityAnalyzer()     # ready-made modelclass TextIn(BaseModel):    text: strdef classify(t):    probs = model.predict_proba([t])[0]    i = probs.argmax()    return str(model.classes_[i]), round(float(probs[i]), 3)@app.get("/health")def health():    return {"status": "ok"}@app.post("/predict")def predict(body: TextIn):    text = body.text.strip()    if not text:        raise HTTPException(status_code=400, detail="Text is empty")    # Overall result for the whole paragraph    overall, confidence = classify(text)    # Result for each sentence    parts = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]    sentences = []    for s in parts:        label, conf = classify(s)        sentences.append({"text": s, "sentiment": label, "confidence": conf})    # Ready-made VADER model, for comparison    score = vader.polarity_scores(text)["compound"]   # -1 to +1    if score >= 0.05:        vader_label = "positive"    elif score <= -0.05:        vader_label = "negative"    else:        vader_label = "neutral"    return {        "overallSentiment": overall,        "confidence": confidence,        "sentences": sentences,        "vaderScore": score,        "vaderLabel": vader_label,    }
+Code explained
+Code | What it does | Why it matters
+Code
+What it does
+Why it matters
+app = FastAPI() | Creates the web application | The container for all our endpoints
+app = FastAPI()
+Creates the web application
+The container for all our endpoints
+joblib.load("model.joblib") | Loads the trained model into memory once at startup | Loading is slow, so it is done once, not per request. This is how real ML backends work: train offline, serve online
+joblib.load("model.joblib")
+Loads the trained model into memory once at startup
+Loading is slow, so it is done once, not per request. This is how real ML backends work: train offline, serve online
+vader = ... | Loads the ready-made sentiment analyzer | A pre-built model for comparison
+vader = ...
+Loads the ready-made sentiment analyzer
+A pre-built model for comparison
+class TextIn(BaseModel) | Declares that incoming JSON must contain a  text  string | FastAPI automatically rejects malformed requests (input validation)
+class TextIn(BaseModel)
+Declares that incoming JSON must contain a text string
+FastAPI automatically rejects malformed requests (input validation)
+classify() | Asks the model for probabilities for all three classes, picks the highest, returns label plus its probability | Converts raw model output into a label and confidence score
+classify()
+Asks the model for probabilities for all three classes, picks the highest, returns label plus its probability
+Converts raw model output into a label and confidence score
+@app.get("/health") | A simple endpoint that returns ok | Lets other services check if this one is alive
+@app.get("/health")
+A simple endpoint that returns ok
+Lets other services check if this one is alive
+@app.post("/predict") | The main ML endpoint | Where inference happens
+@app.post("/predict")
+The main ML endpoint
+Where inference happens
+HTTPException(400) | Returns an error for empty text | Models should never receive empty input
+HTTPException(400)
+Returns an error for empty text
+Models should never receive empty input
+re.split(...) | Splits the paragraph into sentences after  . ,  ! , or  ? | Enables sentence-level analysis
+re.split(...)
+Splits the paragraph into sentences after ., !, or ?
+Enables sentence-level analysis
+vader.polarity_scores | Returns a compound score from -1 (very negative) to +1 (very positive). We map it to a label using standard thresholds (±0.05) | VADER uses a hand-built dictionary of word scores, not training
+vader.polarity_scores
+Returns a compound score from -1 (very negative) to +1 (very positive). We map it to a label using standard thresholds (±0.05)
+VADER uses a hand-built dictionary of word scores, not training
+💡 Why we compare two models: Our model learned from 90 examples, while VADER uses a pre-built word-score dictionary. When they disagree, it reveals each approach’s strengths and limits.
+⚡ Impact on the project: This file converts a Python script into a service that any language can use through HTTP. It is the bridge between ML and the web stack.
+▶️ Start it:
+uvicorn app:app --reload --port 8000
+app:app means “the object named app in the file app.py”. --reload restarts on code changes. Leave this terminal running.
+Expected output: Uvicorn running on http://127.0.0.1:8000
+Step 3.5: Test the ML API in Thunder Client
+Click the Thunder Client icon in the VS Code sidebar, then New Request.
+💡 Why test now: Testing each layer separately means that when something breaks later, you know which layer is at fault. This is a core professional habit.
+Test | Method | URL | Body (Body tab → JSON) | Expected
+Test
+Method
+URL
+Body (Body tab → JSON)
+Expected
+1. Health | GET | http://127.0.0.1:8000/health | none | {"status":"ok"}
+1. Health
+GET
+http://127.0.0.1:8000/health
+none
+{"status":"ok"}
+2. Predict | POST | http://127.0.0.1:8000/predict | {"text": "I love this course. The lab was boring though. The exam is on Friday."} | JSON with  overallSentiment ,  confidence , 3 sentences,  vaderScore ,  vaderLabel
+2. Predict
+POST
+http://127.0.0.1:8000/predict
+{"text": "I love this course. The lab was boring though. The exam is on Friday."}
+JSON with overallSentiment, confidence, 3 sentences, vaderScore, vaderLabel
+3. Error case | POST | http://127.0.0.1:8000/predict | {"text": " "} | Status 400, "Text is empty"
+3. Error case
+POST
+http://127.0.0.1:8000/predict
+{"text": " "}
+Status 400, "Text is empty"
+✅ Checkpoint: All three tests behave as expected.
+🗄️ MODULE 4: The Express Backend and MongoDB
+🧠 Concept: Express is the “manager”. React talks only to Express. Express validates input, asks the ML service for predictions, saves results to MongoDB, and returns answers. React never talks directly to Python or MongoDB, which keeps the system secure and organized.
+Step 4.1: Initialize the Node project
+Open a new terminal (+ button) at the project root:
+cd servernpm init -ynpm install express mongoose dotenvnpm install -D nodemonnpm pkg set type=module scripts.dev="nodemon server.js" scripts.start="node server.js" main=server.js
+What this does:
+npm init -y creates package.json, the project’s identity and dependency list.
+npm install ... downloads libraries into node_modules.
+npm install -D nodemon installs a development-only tool.
+npm pkg set ... edits package.json: type=module enables modern import syntax, and scripts.dev creates the shortcut npm run dev.
+Library | Role
+Library
+Role
+express | The web framework that defines API endpoints
+express
+The web framework that defines API endpoints
+mongoose | Lets us work with MongoDB using JavaScript objects and schemas
+mongoose
+Lets us work with MongoDB using JavaScript objects and schemas
+dotenv | Reads configuration from a  .env  file
+dotenv
+Reads configuration from a .env file
+nodemon | Automatically restarts the server when you save a file
+nodemon
+Automatically restarts the server when you save a file
+✅ Checkpoint: Open server/package.json and confirm it contains "type": "module" and a dev script.
+Create this structure inside server:
+server/├── models/Analysis.js├── routes/analysisRoutes.js├── .env└── server.js
+Step 4.2: Configuration file
+📄 File: server/.env
+PORT=5000MONGO_URI=mongodb://127.0.0.1:27017/sentimentdbML_URL=http://127.0.0.1:8000
+What it does: Stores settings as key=value pairs.
+Setting | Meaning
+Setting
+Meaning
+PORT | Port Express listens on
+PORT
+Port Express listens on
+MONGO_URI | Database address.  sentimentdb  is the database name, created automatically on first save
+MONGO_URI
+Database address. sentimentdb is the database name, created automatically on first save
+ML_URL | Where the Python service lives
+ML_URL
+Where the Python service lives
+💡 Why we do this: Settings and secrets should not be hard-coded in source files. If the ML service moves to another machine, you change one line here and no code. In real projects, .env also holds passwords and API keys and is excluded from Git.
+⚠️ Note: Changes to .env require restarting the server (Ctrl+C, then npm run dev).
+Step 4.3: Define the data model
+📄 File: server/models/Analysis.js
+import mongoose from "mongoose";const analysisSchema = new mongoose.Schema(  {    text: { type: String, required: true },    overallSentiment: String,    confidence: Number,    sentences: [      {        text: String,        sentiment: String,        confidence: Number,      },    ],    vaderScore: Number,    vaderLabel: String,  },  { timestamps: true } // adds createdAt automatically);export default mongoose.model("Analysis", analysisSchema);
+Code explained
+Code | Meaning
+Code
+Meaning
+new mongoose.Schema({...}) | A schema is a blueprint describing what one analysis record must look like
+new mongoose.Schema({...})
+A schema is a blueprint describing what one analysis record must look like
+required: true | A record cannot be saved without  text
+required: true
+A record cannot be saved without text
+sentences: [ {...} ] | An array of small objects, one per sentence. MongoDB stores nested data naturally inside one document
+sentences: [ {...} ]
+An array of small objects, one per sentence. MongoDB stores nested data naturally inside one document
+timestamps: true | Mongoose adds  createdAt  and  updatedAt  automatically
+timestamps: true
+Mongoose adds createdAt and updatedAt automatically
+mongoose.model("Analysis", ...) | Creates a model, which gives us methods like  create ,  find ,  findById ,  findByIdAndDelete . MongoDB stores it in a collection named  analyses  (auto-pluralized)
+mongoose.model("Analysis", ...)
+Creates a model, which gives us methods like create, find, findById, findByIdAndDelete. MongoDB stores it in a collection named analyses (auto-pluralized)
+💡 Why a schema: MongoDB itself is flexible and accepts anything. The schema adds consistency and validation so our data stays clean.
+⚡ Impact: The fields mirror exactly what the Python service returns, so we can save the ML result with almost no conversion.
+Step 4.4: Create the API endpoints
+📄 File: server/routes/analysisRoutes.js
+import express from "express";import mongoose from "mongoose";import Analysis from "../models/Analysis.js";const router = express.Router();// POST /api/analyses  -> send text to ML service, save resultrouter.post("/", async (req, res) => {  const text = req.body?.text;  if (!text || !text.trim()) {    return res.status(400).json({ error: "Text is required" });  }  if (text.length > 5000) {    return res.status(400).json({ error: "Text is too long (max 5000 characters)" });  }  let result;  try {    const mlRes = await fetch(`${process.env.ML_URL}/predict`, {      method: "POST",      headers: { "Content-Type": "application/json" },      body: JSON.stringify({ text: text.trim() }),    });    if (!mlRes.ok) throw new Error("ML service error");    result = await mlRes.json();  } catch (err) {    return res      .status(503)      .json({ error: "ML service is not available. Start it on port 8000." });  }  try {    const saved = await Analysis.create({ text: text.trim(), ...result });    res.status(201).json(saved);  } catch (err) {    res.status(500).json({ error: "Could not save the analysis" });  }});// GET /api/analyses  -> history, newest firstrouter.get("/", async (req, res) => {  const list = await Analysis.find().sort({ createdAt: -1 }).limit(50);  res.json(list);});// GET /api/analyses/stats/summary  -> counts per sentiment// (must be above "/:id", otherwise "stats" would be read as an id)router.get("/stats/summary", async (req, res) => {  const rows = await Analysis.aggregate([    { $group: { _id: "$overallSentiment", count: { $sum: 1 } } },  ]);  const stats = { positive: 0, negative: 0, neutral: 0 };  rows.forEach((r) => (stats[r._id] = r.count));  res.json(stats);});// GET /api/analyses/:id  -> one analysisrouter.get("/:id", async (req, res) => {  if (!mongoose.isValidObjectId(req.params.id)) {    return res.status(400).json({ error: "Invalid id" });  }  const item = await Analysis.findById(req.params.id);  if (!item) return res.status(404).json({ error: "Not found" });  res.json(item);});// DELETE /api/analyses/:idrouter.delete("/:id", async (req, res) => {  if (!mongoose.isValidObjectId(req.params.id)) {    return res.status(400).json({ error: "Invalid id" });  }  const item = await Analysis.findByIdAndDelete(req.params.id);  if (!item) return res.status(404).json({ error: "Not found" });  res.json({ message: "Deleted" });});export default router;
+⭐ The most important endpoint: POST / (how an AI/ML backend works)
+Follow the request’s journey:
+Stage | Code | Purpose
+Stage
+Code
+Purpose
+1. Validate | Check  text  exists and is under 5000 characters | Never trust user input. Bad input is rejected early with status 400
+1. Validate
+Check text exists and is under 5000 characters
+Never trust user input. Bad input is rejected early with status 400
+2. Call the ML service | fetch(ML_URL/predict)  sends the text as JSON to Python | This is the microservice call, where Node asks Python for a prediction
+2. Call the ML service
+fetch(ML_URL/predict) sends the text as JSON to Python
+This is the microservice call, where Node asks Python for a prediction
+3. Handle ML failure | catch  returns 503 (Service Unavailable) | ML services can be down or slow. The backend must fail gracefully, not crash
+3. Handle ML failure
+catch returns 503 (Service Unavailable)
+ML services can be down or slow. The backend must fail gracefully, not crash
+4. Save | Analysis.create({ text, ...result })  stores the text plus all ML outputs.  ...result  copies every field from the ML response | Persists the result for history and analytics
+4. Save
+Analysis.create({ text, ...result }) stores the text plus all ML outputs. ...result copies every field from the ML response
+Persists the result for history and analytics
+5. Respond | 201 (Created) plus the saved record | Tells React what happened and gives it the data
+5. Respond
+201 (Created) plus the saved record
+Tells React what happened and gives it the data
+Other endpoints
+Endpoint | What it does | Notes
+Endpoint
+What it does
+Notes
+GET / | Returns the 50 newest analyses | sort({createdAt: -1})  = newest first,  limit(50)  prevents huge responses
+GET /
+Returns the 50 newest analyses
+sort({createdAt: -1}) = newest first, limit(50) prevents huge responses
+GET /stats/summary | Counts analyses per sentiment using an aggregation ( $group ) | MongoDB does the counting. Order matters: this route must be above  /:id , or Express would treat the word “stats” as an id
+GET /stats/summary
+Counts analyses per sentiment using an aggregation ($group)
+MongoDB does the counting. Order matters: this route must be above /:id, or Express would treat the word “stats” as an id
+GET /:id | Returns one record | isValidObjectId  stops malformed ids from crashing Mongoose
+GET /:id
+Returns one record
+isValidObjectId stops malformed ids from crashing Mongoose
+DELETE /:id | Removes one record | Returns 404 if it doesn’t exist
+DELETE /:id
+Removes one record
+Returns 404 if it doesn’t exist
+HTTP status codes used
+Code | Meaning
+Code
+Meaning
+200 | OK
+200
+OK
+201 | Created
+201
+Created
+400 | Bad request (client’s mistake)
+400
+Bad request (client’s mistake)
+404 | Not found
+404
+Not found
+500 | Server error
+500
+Server error
+503 | Dependent service unavailable
+503
+Dependent service unavailable
+Step 4.5: Create the server entry point
+📄 File: server/server.js
+import "dotenv/config";import express from "express";import mongoose from "mongoose";import analysisRoutes from "./routes/analysisRoutes.js";const app = express();app.use(express.json());app.get("/", (req, res) => res.send("Sentiment API is running"));app.use("/api/analyses", analysisRoutes);mongoose  .connect(process.env.MONGO_URI)  .then(() => {    console.log("MongoDB connected");    app.listen(process.env.PORT, () =>      console.log(`Server running on port ${process.env.PORT}`)    );  })  .catch((err) => console.error("MongoDB connection error:", err.message));
+Code explained
+Code | Meaning
+Code
+Meaning
+import "dotenv/config" | Loads  .env  values into  process.env . Must be first
+import "dotenv/config"
+Loads .env values into process.env. Must be first
+app.use(express.json()) | Middleware: converts incoming JSON text into a JavaScript object at  req.body . Without it  req.body  is empty
+app.use(express.json())
+Middleware: converts incoming JSON text into a JavaScript object at req.body. Without it req.body is empty
+app.use("/api/analyses", analysisRoutes) | Mounts our router, so the route  /  becomes  /api/analyses
+app.use("/api/analyses", analysisRoutes)
+Mounts our router, so the route / becomes /api/analyses
+mongoose.connect(...) | Connects to MongoDB
+mongoose.connect(...)
+Connects to MongoDB
+.then(() => app.listen(...)) | Starts accepting requests only after the database is connected, so the server never runs in a half-working state
+.then(() => app.listen(...))
+Starts accepting requests only after the database is connected, so the server never runs in a half-working state
+▶️ Start it:
+npm run dev
+Expected output: MongoDB connected and Server running on port 5000. Leave it running.
+Step 4.6: Test the Express API in Thunder Client
+⚠️ Prerequisite: Python service (port 8000) must be running. For POST requests, set Body → JSON.
+# | Method | URL | Body | Expected | What it proves
+#
+Method
+URL
+Body
+Expected
+What it proves
+1 | POST | http://localhost:5000/api/analyses | {"text": "The food was delicious. The waiter was rude. We will visit again."} | 201 + record with  _id | Full chain: Express → Python → MongoDB
+1
+POST
+http://localhost:5000/api/analyses
+{"text": "The food was delicious. The waiter was rude. We will visit again."}
+201 + record with _id
+Full chain: Express → Python → MongoDB
+2 | POST | same | {"text": "Terrible service and a dirty room."} | 201, negative | Model handles different inputs
+2
+POST
+same
+{"text": "Terrible service and a dirty room."}
+201, negative
+Model handles different inputs
+3 | GET | http://localhost:5000/api/analyses | none | List of both | Reading from DB
+3
+GET
+http://localhost:5000/api/analyses
+none
+List of both
+Reading from DB
+4 | GET | http://localhost:5000/api/analyses/stats/summary | none | {"positive":..,"negative":..,"neutral":..} | Aggregation works
+4
+GET
+http://localhost:5000/api/analyses/stats/summary
+none
+{"positive":..,"negative":..,"neutral":..}
+Aggregation works
+5 | GET | http://localhost:5000/api/analyses/<an _id from test 3> | none | One record | Fetch by id
+5
+GET
+http://localhost:5000/api/analyses/<an _id from test 3>
+none
+One record
+Fetch by id
+6 | DELETE | http://localhost:5000/api/analyses/<that _id> | none | {"message":"Deleted"} | Deletion
+6
+DELETE
+http://localhost:5000/api/analyses/<that _id>
+none
+{"message":"Deleted"}
+Deletion
+7 | POST | http://localhost:5000/api/analyses | {"text": ""} | 400 “Text is required” | Input validation
+7
+POST
+http://localhost:5000/api/analyses
+{"text": ""}
+400 “Text is required”
+Input validation
+8 | GET | http://localhost:5000/api/analyses/abc | none | 400 “Invalid id” | Id validation
+8
+GET
+http://localhost:5000/api/analyses/abc
+none
+400 “Invalid id”
+Id validation
+🧪 Test 9 (failure handling): Press Ctrl+C in the Python terminal, repeat test 1, and expect 503 “ML service is not available”. Restart Python with uvicorn app:app --reload --port 8000. This demonstrates graceful failure when a dependency is down.
+Step 4.7: Inspect the database in Compass
+In Compass, click the refresh icon next to Databases.
+Open sentimentdb → analyses.
+Expand a document and look at sentences (an array of objects), vaderScore, and createdAt.
+💡 Why: Seeing the stored data connects everything. The ML output you saw in Thunder Client is now permanent data. Filter with { "overallSentiment": "negative" } to see how queries work.
+✅ Checkpoint: Tests 1-8 pass and documents appear in Compass.
+⚛️ MODULE 5: The React Frontend
+🧠 Concept: React is the user interface. It collects input, sends it to Express using fetch, and displays the response. React holds state (data that, when changed, automatically updates the screen).
+Step 5.1: Create the React app
+Open a new terminal at the project root (sentiment-analyzer):
+npm create vite@latest client -- --template react
+If asked: choose JavaScript, any linter, No to experimental options, and No to “install and start now”. Then:
+cd clientnpm install
+What this does: Vite is a build tool that scaffolds a React project and gives a fast development server. npm install downloads React and its tools.
+Step 5.2: Connect React to Express (proxy)
+📄 File: client/vite.config.js (replace everything)
+import { defineConfig } from "vite";import react from "@vitejs/plugin-react";export default defineConfig({  plugins: [react()],  server: {    proxy: {      "/api": "http://localhost:5000",    },  },});
+What it does: Any request from React starting with /api is forwarded to Express on port 5000.
+💡 Why we do this: React runs on port 5173 and Express on 5000. Browsers block calls between different origins (the CORS policy). With the proxy, the browser believes it is talking only to port 5173, so no CORS problems occur, and our React code can use short URLs like /api/analyses.
+⚠️ Important: Restart npm run dev in client after editing this file.
+Step 5.3: Build the main component
+📄 File: client/src/App.jsx (select all, delete, paste)
+import { useEffect, useState } from "react";import "./App.css";export default function App() {  const [text, setText] = useState("");  const [result, setResult] = useState(null);  const [history, setHistory] = useState([]);  const [stats, setStats] = useState({ positive: 0, negative: 0, neutral: 0 });  const [loading, setLoading] = useState(false);  const [error, setError] = useState("");  const loadData = async () => {    const h = await fetch("/api/analyses").then((r) => r.json());    const s = await fetch("/api/analyses/stats/summary").then((r) => r.json());    setHistory(h);    setStats(s);  };  useEffect(() => {    loadData().catch(() => setError("Cannot reach the server"));  }, []);  const analyze = async () => {    if (!text.trim()) return;    setLoading(true);    setError("");    try {      const res = await fetch("/api/analyses", {        method: "POST",        headers: { "Content-Type": "application/json" },        body: JSON.stringify({ text }),      });      const data = await res.json();      if (!res.ok) throw new Error(data.error || "Something went wrong");      setResult(data);      await loadData();    } catch (err) {      setError(err.message);    } finally {      setLoading(false);    }  };  const remove = async (id) => {    await fetch(`/api/analyses/${id}`, { method: "DELETE" });    loadData();  };  return (    <div className="container">      <h1>Sentiment & Tone Analyzer</h1>      <div className="card">        <textarea          rows="6"          value={text}          onChange={(e) => setText(e.target.value)}          placeholder="Paste a paragraph here..."        />        <button onClick={analyze} disabled={loading}>          {loading ? "Analyzing..." : "Analyze"}        </button>        {error && <p className="error">{error}</p>}      </div>      {result && (        <div className="card">          <h2>            Overall:{" "}            <span className={`tag ${result.overallSentiment}`}>              {result.overallSentiment}            </span>{" "}            ({Math.round(result.confidence * 100)}% confident)          </h2>          <p>            Ready-made VADER model says:{" "}            <span className={`tag ${result.vaderLabel}`}>{result.vaderLabel}</span>{" "}            (score {result.vaderScore})          </p>          <h3>Sentence by sentence</h3>          {result.sentences.map((s, i) => (            <div key={i} className={`sentence ${s.sentiment}`}>              {s.text} <b>({s.sentiment}, {Math.round(s.confidence * 100)}%)</b>            </div>          ))}        </div>      )}      <div className="card">        <h2>Summary</h2>        <p>          Positive: {stats.positive} | Negative: {stats.negative} | Neutral:{" "}          {stats.neutral}        </p>        <h2>History</h2>        {history.length === 0 && <p>No analyses yet.</p>}        {history.map((h) => (          <div key={h._id} className="history-item">            <div>              <span className={`tag ${h.overallSentiment}`}>{h.overallSentiment}</span>{" "}              {h.text.length > 80 ? h.text.slice(0, 80) + "..." : h.text}            </div>            <button className="danger" onClick={() => remove(h._id)}>              Delete            </button>          </div>        ))}      </div>    </div>  );}
+Code explained
+Code | Meaning
+Code
+Meaning
+useState | Creates a piece of state. When a setter (e.g.  setResult ) is called, React re-renders the screen. We keep: typed text, the latest result, history, stats, loading flag, error message
+useState
+Creates a piece of state. When a setter (e.g. setResult) is called, React re-renders the screen. We keep: typed text, the latest result, history, stats, loading flag, error message
+loadData() | Fetches history and stats from Express and stores them in state
+loadData()
+Fetches history and stats from Express and stores them in state
+useEffect(..., []) | Runs once when the page first loads, so history appears immediately
+useEffect(..., [])
+Runs once when the page first loads, so history appears immediately
+analyze() | Called on button click. Sets loading, sends a POST with the text as JSON, checks  res.ok , stores the result, then refreshes history.  finally  always turns off the loading flag
+analyze()
+Called on button click. Sets loading, sends a POST with the text as JSON, checks res.ok, stores the result, then refreshes history. finally always turns off the loading flag
+JSON.stringify | Converts a JavaScript object into JSON text for sending
+JSON.stringify
+Converts a JavaScript object into JSON text for sending
+remove(id) | Sends DELETE, then reloads data
+remove(id)
+Sends DELETE, then reloads data
+disabled={loading} | Prevents double-clicking while a request is in progress
+disabled={loading}
+Prevents double-clicking while a request is in progress
+{result && (...)} | Conditional rendering: the result card shows only when a result exists
+{result && (...)}
+Conditional rendering: the result card shows only when a result exists
+.map(...) | Creates one element per item in a list.  key  helps React track items
+.map(...)
+Creates one element per item in a list. key helps React track items
+className={tag ${...}} | Builds a CSS class from the data (e.g.  tag positive ), so the color follows the sentiment
+className={tag ${...}}
+Builds a CSS class from the data (e.g. tag positive), so the color follows the sentiment
+Math.round(confidence * 100) | Turns 0.87 into 87%
+Math.round(confidence * 100)
+Turns 0.87 into 87%
+⚡ Impact: This file is the entire user experience. It shows the full request cycle: user action → state change → API call → response → state update → screen update.
+Step 5.4: Styling
+📄 File: client/src/App.css (replace everything)
+body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }.container { max-width: 750px; margin: 30px auto; padding: 0 16px; }h1 { text-align: center; }.card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 15px; margin-bottom: 10px; }button { background: #4f46e5; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }button:disabled { background: #a5a5c8; cursor: not-allowed; }button.danger { background: #dc2626; padding: 6px 10px; }.error { color: #dc2626; }.tag { padding: 2px 10px; border-radius: 12px; color: white; font-size: 14px; }.tag.positive { background: #16a34a; }.tag.negative { background: #dc2626; }.tag.neutral { background: #6b7280; }.sentence { padding: 8px 10px; margin: 6px 0; border-left: 4px solid; border-radius: 4px; }.sentence.positive { background: #dcfce7; border-color: #16a34a; }.sentence.negative { background: #fee2e2; border-color: #dc2626; }.sentence.neutral { background: #f3f4f6; border-color: #6b7280; }.history-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eee; }
+What it does: Styles the layout (card design, centered container) and uses the classes positive, negative, neutral to color results: green, red, grey.
+💡 Why it matters: Color-coding makes ML output instantly readable, which is the point of presenting AI results to users. Also open client/src/index.css, delete everything inside, and save it empty (the template’s default styles would conflict with ours).
+Step 5.5: Run the frontend
+npm run dev
+Open the URL printed (usually http://localhost:5173).
+🏁 MODULE 6: Final Integration Test
+Running everything together
+Terminal | Folder | Command
+Terminal
+Folder
+Command
+1 | ml-service  (with  (.venv)  active) | uvicorn app:app --reload --port 8000
+1
+ml-service (with (.venv) active)
+uvicorn app:app --reload --port 8000
+2 | server | npm run dev
+2
+server
+npm run dev
+3 | client | npm run dev
+3
+client
+npm run dev
+Background | MongoDB service | Running automatically
+Background
+MongoDB service
+Running automatically
+🧪 Test scenario
+Paste this into the app and click Analyze:
+The new library is beautiful and the staff are very helpful. However, the wifi is slow and the chairs are uncomfortable. The library opens at nine.
+Observe the overall result, the VADER comparison, and the colored sentences.
+Watch Summary and History update.
+In Compass, refresh sentimentdb → analyses and open the new document.
+Click Delete in the app, refresh Compass, and see it vanish.
+🔄 The complete journey of one click (how it all connects)
+1. User clicks "Analyze"2. React:   POST /api/analyses  {text}                    (via Vite proxy)3. Express: validates text4. Express: POST http://127.0.0.1:8000/predict  {text}    (to Python)5. Python:  splits sentences → TF-IDF → Logistic Regression → probabilities            + VADER score → returns JSON6. Express: saves text + result in MongoDB (Compass shows it)7. Express: returns the saved record to React (201)8. React:   updates state → screen shows colors, percentages, history
+📂 Final folder structure
+sentiment-analyzer/├── ml-service/│   ├── .venv/│   ├── dataset.py│   ├── train.py│   ├── app.py│   └── model.joblib        (created by train.py)├── server/│   ├── models/Analysis.js│   ├── routes/analysisRoutes.js│   ├── .env│   ├── server.js│   └── package.json└── client/    ├── src/App.jsx    ├── src/App.css    ├── src/index.css    └── vite.config.js
+🧠 MODULE 7: Understanding How an AI/ML Backend Works
+Concept | Where you saw it | Key takeaway
+Concept
+Where you saw it
+Key takeaway
+Training vs inference | train.py  vs  app.py | Training is slow and happens once offline. Inference is fast and happens on every request
+Training vs inference
+train.py vs app.py
+Training is slow and happens once offline. Inference is fast and happens on every request
+Model persistence | joblib.dump  /  joblib.load | A trained model is just a file that APIs load into memory
+Model persistence
+joblib.dump / joblib.load
+A trained model is just a file that APIs load into memory
+Model as a service | FastAPI  /predict | Wrapping a model in an API makes it reusable by any app
+Model as a service
+FastAPI /predict
+Wrapping a model in an API makes it reusable by any app
+Microservices | Express calling Python | Different languages cooperate over HTTP and JSON
+Microservices
+Express calling Python
+Different languages cooperate over HTTP and JSON
+Confidence scores | predict_proba | ML gives probabilities, not certainties. Show them to users
+Confidence scores
+predict_proba
+ML gives probabilities, not certainties. Show them to users
+Evaluation | accuracy_score , test split | Always test on unseen data
+Evaluation
+accuracy_score, test split
+Always test on unseen data
+Graceful failure | 503 handling, input validation | ML services fail. Backends must handle it
+Graceful failure
+503 handling, input validation
+ML services fail. Backends must handle it
+Data persistence | Mongoose + MongoDB | Storing predictions enables history, analytics, and future retraining
+Data persistence
+Mongoose + MongoDB
+Storing predictions enables history, analytics, and future retraining
+Model comparison | Our model vs VADER | Different approaches give different answers
+Model comparison
+Our model vs VADER
+Different approaches give different answers
+⚠️ Limitations to discuss
+Small dataset: 90 sentences is a teaching size. Unknown words get weak predictions.
+Sarcasm: “Oh great, another delay.” looks positive to a model that only sees words.
+Bias: A model reflects its training data. If the data lacks some styles of writing, it fails on them.
+Sentence splitting: Our simple rule can break on abbreviations like “Dr.”
+💪 Practice Exercises
+Improve the model: Add 10 new sentences to each list in dataset.py, run python train.py, and compare accuracy before and after. Restart uvicorn to load the new model.
+Compare models: Test five sentences where our model and VADER disagree. Explain why.
+Break it on purpose: Try sarcasm, a very short text (ok), and mixed emotions. Record what happens.
+Extend the API: Add a GET /api/analyses?sentiment=negative filter using Analysis.find({ overallSentiment: ... }).
+Extend the UI: Show a small colored bar for each sentence’s confidence.
+🔧 Troubleshooting Guide
+Problem | Likely cause and fix
+Problem
+Likely cause and fix
+python  not recognized | Reinstall Python with “Add to PATH” ticked, reopen VS Code
+python not recognized
+Reinstall Python with “Add to PATH” ticked, reopen VS Code
+PowerShell blocks  Activate.ps1 | Run  Set-ExecutionPolicy -Scope Process Bypass , then activate again
+PowerShell blocks Activate.ps1
+Run Set-ExecutionPolicy -Scope Process Bypass, then activate again
+FileNotFoundError: model.joblib | train.py  was not run. Run  python train.py  inside  ml-service
+FileNotFoundError: model.joblib
+train.py was not run. Run python train.py inside ml-service
+No module named 'fastapi'  (or similar) | Virtual environment not active. Activate it and re-run  pip install
+No module named 'fastapi' (or similar)
+Virtual environment not active. Activate it and re-run pip install
+Cannot use import statement outside a module | "type": "module"  missing in  server/package.json
+Cannot use import statement outside a module
+"type": "module" missing in server/package.json
+MongoDB connection error | MongoDB service not running. Windows:  services.msc  → start MongoDB Server
+MongoDB connection error
+MongoDB service not running. Windows: services.msc → start MongoDB Server
+“ML service is not available” | Python terminal not running, or not on port 8000
+“ML service is not available”
+Python terminal not running, or not on port 8000
+React: “Cannot reach the server” | Express not running, or  vite.config.js  edited without restarting the client
+React: “Cannot reach the server”
+Express not running, or vite.config.js edited without restarting the client
+Changed  .env  but nothing happened | Restart the server (Ctrl+C, then  npm run dev )
+Changed .env but nothing happened
+Restart the server (Ctrl+C, then npm run dev)
+Port already in use | Another copy is running. Close the old terminal or restart VS Code
+Port already in use
+Another copy is running. Close the old terminal or restart VS Code
+✅ Summary: Learning Outcomes Checklist
+Tick these off at the end of the session:
+☐ I can explain the role of React, Express, MongoDB, and the Python ML service.
+☐ I trained and evaluated a machine learning model and saved it.
+☐ I exposed a model through an API and tested it in Thunder Client.
+☐ I connected Node.js to Python over HTTP.
+☐ I created a schema, stored data, and inspected it in Compass.
+☐ I built a React interface that displays ML output.
+☐ I can describe the full journey of one request.
+☐ I can name at least three limitations of my model.
