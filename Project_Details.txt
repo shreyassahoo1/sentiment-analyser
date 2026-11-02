@@ -1,13 +1,16 @@
 🚀 Full-Stack AI/ML Workshop Manual
-Building a Sentiment & Tone Analyzer with MERN + Python Machine Learning
-🎓 Level: 5th-semester UG  |  ⏱️ Duration: 2 hours  |  🛠️ Mode: Hands-on
+
 📘 Document Overview
+
 🎯 What you will build
+
 A web application where a user pastes a paragraph and receives:
+
 An overall sentiment (Positive, Negative, or Neutral) with a confidence score
 A sentence-by-sentence breakdown
 A second opinion from a ready-made model (VADER) for comparison
 A saved history of analyses in a database, with summary counts
+
 🏆 Learning outcomes
 By the end, you will be able to:
 Explain how the layers of a full-stack application connect (React, Express, MongoDB).
@@ -17,9 +20,12 @@ Connect a Node.js backend to a Python ML microservice.
 Test APIs with Thunder Client.
 Inspect stored data with MongoDB Compass.
 Explain how an AI/ML application’s backend works, including its limits.
+
+
 🏗️ Architecture
 ┌──────────────┐    ┌───────────────────┐    ┌──────────────────────────┐│ React :5173  │ →  │ Express/Node :5000│ →  │ Python FastAPI + ML :8000││ (what user   │    │ (main backend:    │    │ (loads trained model,    ││  sees)       │    │  rules + database)│    │  returns predictions)    │└──────────────┘    └─────────┬─────────┘    └──────────────────────────┘                              ↓                    ┌───────────────────┐                    │ MongoDB :27017    │  ← viewed with Compass                    └───────────────────┘
 💡 Why this design? ML libraries (scikit-learn) live in Python, while the web ecosystem lives in JavaScript. Real companies often separate them: the Node server handles users and data, and a Python service handles predictions. This pattern is called a microservice architecture.
+
 📖 Glossary
 Term | Meaning
 Term
@@ -57,6 +63,7 @@ Using a trained model on new data
 Port | A numbered “door” on your computer where a program listens
 Port
 A numbered “door” on your computer where a program listens
+
 🔌 Ports used
 Service | Port
 Service
@@ -73,10 +80,14 @@ Python ML service
 MongoDB | 27017
 MongoDB
 27017
+
 🧰 MODULE 1: Installation and Environment Setup
 Step 1.1: Install the required tools
+
 🎯 Objective: Prepare your computer with every tool the project needs.
-💡 Why we do this: A full-stack AI application uses several technologies. Each one must exist on your machine before any code can run.
+
+💡 Why we do this: 
+A full-stack AI application uses several technologies. Each one must exist on your machine before any code can run.
 Tool | Download from | Role in the project
 Tool
 Download from
@@ -117,6 +128,7 @@ Use the connection string mongodb://127.0.0.1:27017.
 Click Connect.
 What this does: It connects Compass to the MongoDB engine running on your computer (127.0.0.1 means “this computer”, 27017 is MongoDB’s default port).
 Expected output: You see three default databases: admin, config, local.
+
 ❓ Why 127.0.0.1 and not localhost: Newer Node versions sometimes resolve localhost to an IPv6 address that MongoDB isn’t listening on. The numeric address avoids that problem.
 ✅ Checkpoint: Node, npm, Python versions print, and Compass connects.
 📁 MODULE 2: Project Setup
@@ -144,7 +156,9 @@ Open the current folder in VS Code
 💡 Why separate folders: Each layer (ML, backend, frontend) has different languages, libraries, and a different running process. Keeping them apart mirrors real projects and prevents confusion. The client folder will be created automatically in Module 5.
 ⚡ Impact: This folder structure is the skeleton every later step relies on.
 In VS Code, open the terminal with Terminal → New Terminal. You will use three terminals during the workshop, one per service.
+
 🤖 MODULE 3: The Machine Learning Service (Python)
+
 🧠 Concept: Machine learning means a program learns rules from examples instead of being told the rules. Here, we show it labeled sentences (positive, negative, neutral), and it learns which words signal which sentiment.
 Step 3.1: Create a Python virtual environment and install libraries
 cd ml-servicepython -m venv .venv.venv\Scripts\Activate.ps1
