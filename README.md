@@ -6,7 +6,7 @@ React :5173 → Express :5000 → FastAPI ML :8000
               MongoDB :27017 (sentimentdb)
 
 ## Project Files
-- ml-service/dataset.py       — 90 labeled training sentences
+- ml-service/dataset.py       — 90 labeled training sentences for training purposes
 - ml-service/train.py         — TF-IDF + Logistic Regression trainer
 - ml-service/app.py           — FastAPI /predict & /health endpoints
 - ml-service/model.joblib     — Saved trained model
